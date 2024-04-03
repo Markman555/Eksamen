@@ -12,6 +12,18 @@ async function fetchPokemon() {
     console.error("Error:", error);
   }
 }
+// Lager en ny fetche funksjon for typer av Pokemon
+async function fetchTypes() {
+    try {
+        const response = await fetch(`https://pokeapi.co/api/v2/type`)
+        const typesData = await response.json();
+        const types = typesData.results.map((type) => type.name) //I JSON formatet kan arrayet med objekter mappes for å hente type navn
+        return types
+    
+} catch (error) {
+    console.error("Error:", error);
+  }
+}
 
 async function displayPokemons() {
   pokemonList.forEach(async (pokemon) => {
@@ -46,5 +58,3 @@ async function displayPokemons() {
 }
 
 
-
-fetchPokemon();
