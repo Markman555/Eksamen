@@ -3,6 +3,7 @@ const typesContainer = document.getElementById("types-container");
 const allPokemonBtn = document.getElementById("all-pokemon");
 let pokemonList = []; // Array til de 50 fetchede pokemon som først displayes
 let filteredPokemonList = []; // Array for filtrere pokemon
+let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || [];
 
 async function fetchPokemon() {
   try {
@@ -156,6 +157,10 @@ function displayPokemons(pokemons) {
     pokemonCard.append(catchPokemon);
     pokemonCard.append(deletePokemon);
     pokemonCard.append(editPokemon);
+
+    catchPokemon.addEventListener("click", () => {
+      savePokemon(pokemonData);
+    });
   });
 }
 //Funksjonalitet til Type knappene
@@ -185,5 +190,36 @@ async function fetchPokemonTypes(url) {
   }
 }
 
+function savePokemon(pokemonData) {
+  if (savedPokemons.length < 5) { // Check if the limit of 5 saved Pokémon is reached
+    savedPokemons.push(pokemonData);
+    localStorage.setItem('savedPokemons', JSON.stringify(savedPokemons));
+    displaySavedPokemons(); // Update the display of saved Pokémon
+  } else {
+    alert('You can only save up to 5 Pokémon.');
+  }
+}
+
+function displaySavedPokemons() {
+  const savedPokemonsContainer = document.getElementById("saved-pokemons");
+  savedPokemonsContainer.innerHTML = "";
+
+  savedPokemons.forEach((pokemonData) => {
+    const savedPokemonCard = document.createElement("div");
+    const primaryType = pokemonData.types[0].type.name;
+    savedPokemonCard.style.backgroundColor = getTypeColor(primaryType);
+    savedPokemonCard.innerHTML = `<img src=${
+      pokemonData.sprites.front_default
+    } />
+                                   <h3>${pokemonData.name}</h3>
+                                   <p>${pokemonData.types
+                                     .map((type) => type.type.name)
+                                     .join(", ")}</p>`;
+
+    savedPokemonsContainer.appendChild(savedPokemonCard);
+  });
+}
+
 fetchPokemon();
 displayTypes();
+displaySavedPokemons();
