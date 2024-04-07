@@ -3,7 +3,7 @@ const typesContainer = document.getElementById("types-container");
 const allPokemonBtn = document.getElementById("all-pokemon");
 let pokemonList = []; // Array til de 50 fetchede pokemon som først displayes
 let filteredPokemonList = []; // Array for filtrere pokemon
-let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || [];
+let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || []; //Hent savedPokemons fra localstorage
 
 async function fetchPokemon() {
   try {
@@ -159,6 +159,7 @@ function displayPokemons(pokemons) {
     pokemonCard.append(editPokemon);
 
     catchPokemon.addEventListener("click", () => {
+      //Eventlistener for lagre knappen
       savePokemon(pokemonData);
     });
   });
@@ -190,13 +191,15 @@ async function fetchPokemonTypes(url) {
   }
 }
 
+//pokemonData som parameter, variabel som inneholder info om Pokemon fra displayPokemon funksjonen
 function savePokemon(pokemonData) {
-  if (savedPokemons.length < 5) { // Check if the limit of 5 saved Pokémon is reached
+  if (savedPokemons.length < 5) {
+    // Kan ikke være mer enn 5 Pokemon
     savedPokemons.push(pokemonData);
-    localStorage.setItem('savedPokemons', JSON.stringify(savedPokemons));
-    displaySavedPokemons(); // Update the display of saved Pokémon
+    localStorage.setItem("savedPokemons", JSON.stringify(savedPokemons)); //Legger til key og value
+    displaySavedPokemons(); // Kall funksjonen
   } else {
-    alert('You can only save up to 5 Pokémon.');
+    alert("Du kan kun lagre 5 pokemon.");
   }
 }
 
@@ -208,6 +211,11 @@ function displaySavedPokemons() {
     const savedPokemonCard = document.createElement("div");
     const primaryType = pokemonData.types[0].type.name;
     savedPokemonCard.style.backgroundColor = getTypeColor(primaryType);
+
+    const catchPokemon = document.createElement("button");
+    const deletePokemon = document.createElement("button");
+    const editPokemon = document.createElement("button");
+    savedPokemonCard.style.textAlign = "center";
     savedPokemonCard.innerHTML = `<img src=${
       pokemonData.sprites.front_default
     } />
@@ -216,7 +224,18 @@ function displaySavedPokemons() {
                                      .map((type) => type.type.name)
                                      .join(", ")}</p>`;
 
+    catchPokemon.textContent = "Lagre";
+    deletePokemon.textContent = "Fjern";
+    editPokemon.textContent = "Rediger";
+
+    catchPokemon.style.marginLeft = "5px";
+    deletePokemon.style.marginLeft = "5px";
+    editPokemon.style.marginLeft = "5px";
+
     savedPokemonsContainer.appendChild(savedPokemonCard);
+    savedPokemonCard.append(catchPokemon);
+    savedPokemonCard.append(deletePokemon);
+    savedPokemonCard.append(editPokemon);
   });
 }
 
