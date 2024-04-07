@@ -191,10 +191,10 @@ async function fetchPokemonTypes(url) {
 }
 
 function savePokemon(pokemonData) {
-  if (savedPokemons.length < 5) { // Check if the limit of 5 saved Pokémon is reached
+  if (savedPokemons.length < 5) { // Skal kun lagre 5 pokemon
     savedPokemons.push(pokemonData);
     localStorage.setItem('savedPokemons', JSON.stringify(savedPokemons));
-    displaySavedPokemons(); // Update the display of saved Pokémon
+    displaySavedPokemons(); 
   } else {
     alert('You can only save up to 5 Pokémon.');
   }
