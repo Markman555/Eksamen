@@ -1,0 +1,17 @@
+.style{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+img{
+    width: 300px;
+}
+
+p{
+    text-align: center;
+    font-size: 3rem;
+   font-family: fantasy;
+   font-weight: bold;
+}
