@@ -1,32 +1,40 @@
 const pokemonContainer = document.getElementById("Pk-Container");
-const typeSelection = document.getElementById("type-selection");
-const typeButtons = document.getElementById("buttons");
-let pokemonList;
+const typesContainer = document.getElementById("types-container");
+let pokemonList = []; // Array til de 50 fetchede pokemon som først displayes
+let filteredPokemonList = []; // Array for filtrere pokemon
 
 async function fetchPokemon() {
   try {
-    const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=50");
+    // Kalkulerer offset for å lagre et tilfeldig verdi
+    const offset = Math.floor(Math.random() * 1118); // Måtte finne ut hvor mange Pokemon det er i Api'et
+
+    // Manipulere endpoint med limit og offset, for å kun fetche 50, og offset for at det alltid er tilfeldige 50.
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon?limit=50&offset=${offset}`
+    );
     const pokemons = await response.json();
     pokemonList = pokemons.results;
-    displayPokemons();
+    displayPokemons(pokemonList); // Vis pokemon med dette parameteret
   } catch (error) {
     console.error("Error:", error);
   }
 }
 
-// Lager en ny fetche funksjon for typer av Pokemon
+//Her fetcher jeg typer pokemon for å få denne informasjonen
 async function fetchTypes() {
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/type`);
+    const response = await fetch("https://pokeapi.co/api/v2/type/");
     const typesData = await response.json();
-    const types = typesData.results.map((type) => type.name); //I JSON formatet kan arrayet med objekter mappes for å hente type navn
+    const types = typesData.results.map((type) => type.name); //Array må mappes for å få en til to type navn for hver pokemon
     return types;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error fetching Pokémon types:", error);
+    return [];
   }
 }
-
-async function displayTypes(types) {
+//funksjon som opretter knapper for hver pokemon type
+async function displayTypes() {
+  const types = await fetchTypes();
   types.forEach((type) => {
     if (isValidType(type)) {
       //API et hadde en unknown type, derfor sjekker jeg funksjonen med validTypes, før jeg lager knappe element
@@ -36,9 +44,12 @@ async function displayTypes(types) {
       button.style.borderRadius = "25%";
       button.style.width = "60px";
       button.style.backgroundColor = getTypeColor(type); //Funksjon med switch statement gjør at bakgrunnsfargen samsvarer med typen.
-      typeButtons.appendChild(button);
+      button.addEventListener("click", () => filterPokemonsByType(type)); //kaller funksjonen med parameteret 'type' på knappetrykk
+      typesContainer.appendChild(button);
     }
   });
+
+  document.body.prepend(typesContainer);
 }
 
 function isValidType(type) {
@@ -110,19 +121,19 @@ function getTypeColor(type) {
   }
 }
 
-async function displayPokemons() {
-  pokemonContainer.innerHTML = ""; // Clear previous Pokémon cards
+function displayPokemons(pokemons) {
+  pokemonContainer.innerHTML = ""; // Tøm tidligere kort
 
-  pokemonList.forEach(async (pokemon) => {
-    const response = await fetch(pokemon.url); // Fetch individuelle pokemon url
+  pokemons.forEach(async (pokemon) => {
+    const response = await fetch(pokemon.url); //Hver individuelle pokemon url fetches og gjøres om til JSON format
     const pokemonData = await response.json();
 
-    const pokemonCard = document.createElement("div");
+    const pokemonCard = document.createElement("div"); // Lager alle html elementer til kortet
     const catchPokemon = document.createElement("button");
     const deletePokemon = document.createElement("button");
     const editPokemon = document.createElement("button");
 
-    const pokemonType = pokemonData.types //types er et array som inneholder to objekter, derfor bruker jeg map metoden på det
+    const pokemonType = pokemonData.types //types må mappes for å displaye
       .map((type) => type.type.name)
       .join(", ");
 
@@ -143,6 +154,32 @@ async function displayPokemons() {
     pokemonCard.append(editPokemon);
   });
 }
+//Funksjonalitet til Type knappene
+async function filterPokemonsByType(type) {
+  filteredPokemonList = []; // Tøm array når du trykker på knappen
+  // Bruker for of loop for å iterere gjennom pokemon fra pokemonList
+  for (const pokemon of pokemonList) {
+    const pokemonTypes = await fetchPokemonTypes(pokemon.url); //Requester url fra hver pokemon som inneholder typer til Pokemon
+    if (pokemonTypes.includes(type)) {
+      //Hvis pokemon inkluderer typen som blir valgt så pusher jeg inn den pokemon i det filtrerte arrayet.
+      filteredPokemonList.push(pokemon);
+    }
+  }
+
+  displayPokemons(filteredPokemonList);
+}
+//Må opprette et egen fetche funksjon for at filterPokemonsByType skal fungere
+async function fetchPokemonTypes(url) {
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    const pokemonTypes = data.types.map((type) => type.type.name); //går lengre inn i arrayet 
+    return pokemonTypes;
+  } catch (error) {
+    console.error("Error fetching Pokémon types:", error);
+    return [];
+  }
+}
 
 fetchPokemon();
-fetchTypes().then((types) => displayTypes(types));
+displayTypes();
