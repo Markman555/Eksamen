@@ -1,5 +1,6 @@
 const pokemonContainer = document.getElementById("Pk-Container");
 const typesContainer = document.getElementById("types-container");
+const allPokemonBtn = document.getElementById("all-pokemon");
 let pokemonList = []; // Array til de 50 fetchede pokemon som først displayes
 let filteredPokemonList = []; // Array for filtrere pokemon
 
@@ -48,7 +49,7 @@ async function displayTypes() {
       typesContainer.appendChild(button);
     }
   });
-
+  allPokemonBtn.addEventListener("click", () => displayPokemons(pokemonList));
   document.body.prepend(typesContainer);
 }
 
@@ -105,7 +106,7 @@ function getTypeColor(type) {
     case "ground":
       return "#D27D2D";
     case "ice":
-      return "white";
+      return "#99FFFF";
     case "normal":
       return "grey";
     case "poison":
@@ -120,7 +121,7 @@ function getTypeColor(type) {
       return "purple";
   }
 }
-
+//Funksjon å vise pokemon, hvilket blir kalt inne i fetchPokemon
 function displayPokemons(pokemons) {
   pokemonContainer.innerHTML = ""; // Tøm tidligere kort
 
@@ -129,6 +130,9 @@ function displayPokemons(pokemons) {
     const pokemonData = await response.json();
 
     const pokemonCard = document.createElement("div"); // Lager alle html elementer til kortet
+    const primaryType = pokemonData.types[0].type.name; //Henter første typen til Pokemon
+    pokemonCard.style.backgroundColor = getTypeColor(primaryType); //Styler bakgrunnsfargen
+
     const catchPokemon = document.createElement("button");
     const deletePokemon = document.createElement("button");
     const editPokemon = document.createElement("button");
@@ -173,7 +177,7 @@ async function fetchPokemonTypes(url) {
   try {
     const response = await fetch(url);
     const data = await response.json();
-    const pokemonTypes = data.types.map((type) => type.type.name); //går lengre inn i arrayet 
+    const pokemonTypes = data.types.map((type) => type.type.name); //går lengre inn i arrayet
     return pokemonTypes;
   } catch (error) {
     console.error("Error fetching Pokémon types:", error);
