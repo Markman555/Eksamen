@@ -198,21 +198,24 @@ async function fetchPokemonTypes(url) {
 
 //pokemonData som parameter, variabel som inneholder info om Pokemon fra displayPokemon funksjonen
 function savePokemon(pokemonData) {
-  if (savedPokemons.length <= 4) {
+  if (savedPokemons.length < 5) {
     const index = pokemonList.findIndex(
       (pokemon) => pokemon.name === pokemonData.name
     );
-    pokemonList.splice(index, 1); // Fjern det elementet fra listen
+      pokemonList.splice(index, 1); //Finner indeks og fjerner 1 element
 
     const pokemonCard = document.querySelector(
       `[data-name="${pokemonData.name}"]`
     );
-    pokemonCard
-      .remove()
-      // Kan ikke være mer enn 5 Pokemon
-      .savedPokemons.push(pokemonData);
-    localStorage.setItem("savedPokemons", JSON.stringify(savedPokemons)); //Legger til key og value
-    displaySavedPokemons(); // Kall funksjonen
+    if (pokemonCard) {
+      pokemonCard.remove();
+    }
+
+    // Legger til pokemon i SavedPokemons array og localStorage
+    savedPokemons.push(pokemonData);
+    localStorage.setItem("savedPokemons", JSON.stringify(savedPokemons));
+
+    displaySavedPokemons();
   } else {
     alert("Du kan kun lagre 5 pokemon.");
   }
