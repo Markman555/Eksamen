@@ -198,9 +198,19 @@ async function fetchPokemonTypes(url) {
 
 //pokemonData som parameter, variabel som inneholder info om Pokemon fra displayPokemon funksjonen
 function savePokemon(pokemonData) {
-  if (savedPokemons.length < 5) {
-    // Kan ikke være mer enn 5 Pokemon
-    savedPokemons.push(pokemonData);
+  if (savedPokemons.length <= 4) {
+    const index = pokemonList.findIndex(
+      (pokemon) => pokemon.name === pokemonData.name
+    );
+    pokemonList.splice(index, 1); // Fjern det elementet fra listen
+
+    const pokemonCard = document.querySelector(
+      `[data-name="${pokemonData.name}"]`
+    );
+    pokemonCard
+      .remove()
+      // Kan ikke være mer enn 5 Pokemon
+      .savedPokemons.push(pokemonData);
     localStorage.setItem("savedPokemons", JSON.stringify(savedPokemons)); //Legger til key og value
     displaySavedPokemons(); // Kall funksjonen
   } else {
@@ -263,7 +273,7 @@ function deleteSavedPokemon(pokemonData) {
   // Tydeligvis er det bedre å bruke setItem igjen, i stedet for removeItem, takk freeCodeCamp.
   localStorage.setItem("savedPokemons", JSON.stringify(savedPokemons));
   console.log(`Updated savedPokemons in localStorage.`);
-
+  //trengte heller ikke url til pokemon, holdte med navn.
   const savedPokemonCard = document.querySelector(
     `[data-name="${pokemonName}"]`
   );
