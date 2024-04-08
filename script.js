@@ -133,10 +133,12 @@ function displayPokemons(pokemons) {
     const pokemonCard = document.createElement("div"); // Lager alle html elementer til kortet
     const primaryType = pokemonData.types[0].type.name; //Henter første typen til Pokemon
     pokemonCard.style.backgroundColor = getTypeColor(primaryType); //Styler bakgrunnsfargen
+    pokemonCard.dataset.name = pokemonData.name;
+    pokemonCard.dataset.url = pokemonData.species.url; //Bruker dataset attribute, url er inne i species objektet.
 
-    const catchPokemon = document.createElement("button");
-    const deletePokemon = document.createElement("button");
-    const editPokemon = document.createElement("button");
+    const catchPokemonBtn = document.createElement("button");
+    const deletePokemonBtn = document.createElement("button");
+    const editPokemonBtn = document.createElement("button");
 
     const pokemonType = pokemonData.types //types må mappes for å displaye
       .map((type) => type.type.name)
@@ -146,21 +148,24 @@ function displayPokemons(pokemons) {
     pokemonCard.style.textAlign = "center";
     pokemonContainer.append(pokemonCard);
 
-    catchPokemon.textContent = "Lagre";
-    deletePokemon.textContent = "Fjern";
-    editPokemon.textContent = "Rediger";
+    catchPokemonBtn.textContent = "Lagre";
+    deletePokemonBtn.textContent = "Fjern";
+    editPokemonBtn.textContent = "Rediger";
 
-    catchPokemon.style.marginLeft = "5px";
-    deletePokemon.style.marginLeft = "5px";
-    editPokemon.style.marginLeft = "5px";
+    catchPokemonBtn.style.marginLeft = "5px";
+    deletePokemonBtn.style.marginLeft = "5px";
+    editPokemonBtn.style.marginLeft = "5px";
 
-    pokemonCard.append(catchPokemon);
-    pokemonCard.append(deletePokemon);
-    pokemonCard.append(editPokemon);
+    pokemonCard.append(catchPokemonBtn);
+    pokemonCard.append(deletePokemonBtn);
+    pokemonCard.append(editPokemonBtn);
 
-    catchPokemon.addEventListener("click", () => {
+    catchPokemonBtn.addEventListener("click", () => {
       //Eventlistener for lagre knappen
       savePokemon(pokemonData);
+    });
+    deletePokemonBtn.addEventListener("click", () => {
+      deletePokemon(pokemonData);
     });
   });
 }
@@ -211,10 +216,13 @@ function displaySavedPokemons() {
     const savedPokemonCard = document.createElement("div");
     const primaryType = pokemonData.types[0].type.name;
     savedPokemonCard.style.backgroundColor = getTypeColor(primaryType);
+    savedPokemonCard.dataset.name = pokemonData.name;
+    savedPokemonCard.dataset.url = pokemonData.species.url;
 
-    const catchPokemon = document.createElement("button");
-    const deletePokemon = document.createElement("button");
-    const editPokemon = document.createElement("button");
+    const catchPokemonBtn = document.createElement("button");
+    const deletePokemonBtn = document.createElement("button");
+    const editPokemonBtn = document.createElement("button");
+
     savedPokemonCard.style.textAlign = "center";
     savedPokemonCard.innerHTML = `<img src=${
       pokemonData.sprites.front_default
@@ -224,19 +232,55 @@ function displaySavedPokemons() {
                                      .map((type) => type.type.name)
                                      .join(", ")}</p>`;
 
-    catchPokemon.textContent = "Lagre";
-    deletePokemon.textContent = "Fjern";
-    editPokemon.textContent = "Rediger";
+    catchPokemonBtn.textContent = "Lagre";
+    deletePokemonBtn.textContent = "Fjern";
+    editPokemonBtn.textContent = "Rediger";
 
-    catchPokemon.style.marginLeft = "5px";
-    deletePokemon.style.marginLeft = "5px";
-    editPokemon.style.marginLeft = "5px";
+    catchPokemonBtn.style.marginLeft = "5px";
+    deletePokemonBtn.style.marginLeft = "5px";
+    editPokemonBtn.style.marginLeft = "5px";
 
     savedPokemonsContainer.appendChild(savedPokemonCard);
-    savedPokemonCard.append(catchPokemon);
-    savedPokemonCard.append(deletePokemon);
-    savedPokemonCard.append(editPokemon);
+    savedPokemonCard.append(catchPokemonBtn);
+    savedPokemonCard.append(deletePokemonBtn);
+    savedPokemonCard.append(editPokemonBtn);
+
+    deletePokemonBtn.addEventListener("click", () => {
+      deleteSavedPokemon(pokemonData);
+    });
   });
+}
+
+function deleteSavedPokemon(pokemonData) {
+  const pokemonName = pokemonData.name;
+
+  const savedIndex = savedPokemons.findIndex(
+    (pokemon) => pokemon.name === pokemonName
+  );
+
+  savedPokemons.splice(savedIndex, 1);
+
+  // Tydeligvis er det bedre å bruke setItem igjen, i stedet for removeItem, takk freeCodeCamp.
+  localStorage.setItem("savedPokemons", JSON.stringify(savedPokemons));
+  console.log(`Updated savedPokemons in localStorage.`);
+
+  const savedPokemonCard = document.querySelector(
+    `[data-name="${pokemonName}"]`
+  );
+  savedPokemonCard.remove();
+}
+
+function deletePokemon(pokemonData) {
+  const pokemonCard = document.querySelector(
+    `div[data-name="${pokemonData.name}"]`
+  );
+
+  pokemonCard.remove();
+
+  const index = pokemonList.findIndex(
+    (pokemon) => pokemon.name === pokemonData.name
+  );
+  pokemonList.splice(index, 1);
 }
 
 fetchPokemon();
