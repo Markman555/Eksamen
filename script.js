@@ -8,7 +8,7 @@ let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || []; //H
 async function fetchPokemon() {
   try {
     // Kalkulerer offset for å lagre et tilfeldig verdi
-    const offset = Math.floor(Math.random() * 1118); // Måtte finne ut hvor mange Pokemon det er i Api'et
+    const offset = Math.floor(Math.random() * 365); // Måtte finne ut hvor mange Pokemon det er i Api'et
 
     // Manipulere endpoint med limit og offset, for å kun fetche 50, og offset for at det alltid er tilfeldige 50.
     const response = await fetch(
@@ -167,6 +167,9 @@ function displayPokemons(pokemons) {
     deletePokemonBtn.addEventListener("click", () => {
       deletePokemon(pokemonData);
     });
+    editPokemonBtn.addEventListener("click", () => {
+      editPokemon(pokemonData);
+    });
   });
 }
 //Funksjonalitet til Type knappene
@@ -202,7 +205,7 @@ function savePokemon(pokemonData) {
     const index = pokemonList.findIndex(
       (pokemon) => pokemon.name === pokemonData.name
     );
-      pokemonList.splice(index, 1); //Finner indeks og fjerner 1 element
+    pokemonList.splice(index, 1); //Finner indeks og fjerner 1 element
 
     const pokemonCard = document.querySelector(
       `[data-name="${pokemonData.name}"]`
@@ -261,6 +264,9 @@ function displaySavedPokemons() {
     deletePokemonBtn.addEventListener("click", () => {
       deleteSavedPokemon(pokemonData);
     });
+    editPokemonBtn.addEventListener("click", () => {
+      editPokemon(pokemonData);
+    });
   });
 }
 
@@ -294,6 +300,49 @@ function deletePokemon(pokemonData) {
     (pokemon) => pokemon.name === pokemonData.name
   );
   pokemonList.splice(index, 1);
+}
+
+async function editPokemon(pokemonData) {
+  const newName = prompt("Enter the new name for the Pokemon:");
+
+  // Finn pokemonCard med riktig data-name
+  const pokemonCard = document.querySelector(
+    `div[data-name="${pokemonData.name}"]`
+  );
+
+  if (!pokemonCard) {
+    console.error("Pokemon card not found.");
+    return;
+  }
+
+  // Oppdater textContent og pokemonData med nytt navn fra prompt
+  const pokemonNameElement = pokemonCard.querySelector("h3");
+  pokemonNameElement.textContent = newName;
+  pokemonData.name = newName;
+
+  // Prompt for nye typer og sjekk hvor mange den har i forveien
+  let newTypes;
+  if (pokemonData.types.length === 1) {
+    newTypes = [prompt("Enter the new type for the Pokemon:")];
+  } else {
+    newTypes = [
+      prompt("Enter the new primary type for the Pokemon:"),
+      prompt("Enter the new secondary type for the Pokemon:"),
+    ];
+  }
+
+  // select p element og legg til typene med ,
+  const pokemonTypeElement = pokemonCard.querySelector("p");
+
+  const updatedTypes = newTypes.join(", ");
+  pokemonTypeElement.textContent = updatedTypes;
+  // oppdater også i pokemonData objektet
+  pokemonData.types.forEach((type, index) => {
+    type.type.name = newTypes[index];
+  });
+
+  const primaryType = pokemonData.types[0].type.name;
+  pokemonCard.style.backgroundColor = getTypeColor(primaryType);
 }
 
 fetchPokemon();
