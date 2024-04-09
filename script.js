@@ -231,19 +231,19 @@ function createOwnPokemon() {
   pokemonImageElement.style.height = "80px";
 
   const editPokemonBtn = document.createElement("button");
-  editPokemonBtn.textContent = "Edit";
+  editPokemonBtn.textContent = "rediger";
   editPokemonBtn.addEventListener("click", () =>
     editPokemon({ name: newName, type, imageUrl })
   );
 
   const savePokemonBtn = document.createElement("button");
-  savePokemonBtn.textContent = "Save";
+  savePokemonBtn.textContent = "Lagre";
   savePokemonBtn.addEventListener("click", () =>
     savePokemon({ name: newName, type, imageUrl })
   );
 
   const deletePokemonBtn = document.createElement("button");
-  deletePokemonBtn.textContent = "Delete";
+  deletePokemonBtn.textContent = "slett";
   deletePokemonBtn.addEventListener("click", () =>
     deletePokemon({ name: newName, type, imageUrl })
   );
