@@ -8,7 +8,7 @@ let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || []; //H
 async function fetchPokemon() {
   try {
     // Kalkulerer offset for å lagre et tilfeldig verdi
-    const offset = Math.floor(Math.random() * 365); // Måtte finne ut hvor mange Pokemon det er i Api'et
+    const offset = Math.floor(Math.random() * 386); // Måtte finne ut hvor mange Pokemon det er i Api'et
 
     // Manipulere endpoint med limit og offset, for å kun fetche 50, og offset for at det alltid er tilfeldige 50.
     const response = await fetch(
@@ -302,7 +302,8 @@ function deletePokemon(pokemonData) {
   pokemonList.splice(index, 1);
 }
 
-async function editPokemon(pokemonData) {
+//Fiks bug hvor edited pokemon ikke blir fjernet når man flytter til savedPokemon og kan dupliseres
+function editPokemon(pokemonData) {
   const newName = prompt("Enter the new name for the Pokemon:");
 
   // Finn pokemonCard med riktig data-name
@@ -310,15 +311,11 @@ async function editPokemon(pokemonData) {
     `div[data-name="${pokemonData.name}"]`
   );
 
-  if (!pokemonCard) {
-    console.error("Pokemon card not found.");
-    return;
-  }
-
   // Oppdater textContent og pokemonData med nytt navn fra prompt
   const pokemonNameElement = pokemonCard.querySelector("h3");
   pokemonNameElement.textContent = newName;
   pokemonData.name = newName;
+  pokemonCard.dataset.name = newName;
 
   // Prompt for nye typer og sjekk hvor mange den har i forveien
   let newTypes;
