@@ -1,6 +1,7 @@
 const pokemonContainer = document.getElementById("Pk-Container");
 const typesContainer = document.getElementById("types-container");
 const allPokemonBtn = document.getElementById("all-pokemon");
+const createNewPokemon = document.getElementById("create-pokemon");
 let pokemonList = []; // Array til de 50 fetchede pokemon som først displayes
 let filteredPokemonList = []; // Array for filtrere pokemon
 let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || []; //Hent savedPokemons fra localstorage
@@ -146,6 +147,7 @@ function displayPokemons(pokemons) {
 
     pokemonCard.innerHTML = `<img src=${pokemonData.sprites.front_default} /> <h3>${pokemonData.name}</h3> <p>${pokemonType}</p>`;
     pokemonCard.style.textAlign = "center";
+    pokemonCard.style.width = "180px";
     pokemonContainer.append(pokemonCard);
 
     catchPokemonBtn.textContent = "Lagre";
@@ -199,6 +201,77 @@ async function fetchPokemonTypes(url) {
   }
 }
 
+function createOwnPokemon() {
+  const newName = prompt("Enter the name for your Pokémon:");
+  const type = prompt("Enter the type for your Pokémon:");
+  const imageUrl = prompt("Enter the URL for the Pokémon image:");
+
+  if (!newName || !type || !imageUrl) {
+    alert("Please enter a valid name, type, and image URL for your Pokémon.");
+    return;
+  }
+
+  const pokemonContainer = document.getElementById("Pk-Container");
+
+  const pokemonCard = document.createElement("div");
+  pokemonCard.classList.add("pokemon-card");
+  pokemonCard.style.backgroundColor = getTypeColor(type);
+  pokemonCard.dataset.name = newName;
+  pokemonCard.style.textAlign = "center";
+
+  const pokemonTypeElement = document.createElement("p");
+  pokemonTypeElement.textContent = type;
+
+  const pokemonNameElement = document.createElement("h3");
+  pokemonNameElement.textContent = newName;
+
+  const pokemonImageElement = document.createElement("img");
+  pokemonImageElement.src = imageUrl;
+  pokemonImageElement.style.width = "120px";
+  pokemonImageElement.style.height = "80px";
+
+  const editPokemonBtn = document.createElement("button");
+  editPokemonBtn.textContent = "Edit";
+  editPokemonBtn.addEventListener("click", () =>
+    editPokemon({ name: newName, type, imageUrl })
+  );
+
+  const savePokemonBtn = document.createElement("button");
+  savePokemonBtn.textContent = "Save";
+  savePokemonBtn.addEventListener("click", () =>
+    savePokemon({ name: newName, type, imageUrl })
+  );
+
+  const deletePokemonBtn = document.createElement("button");
+  deletePokemonBtn.textContent = "Delete";
+  deletePokemonBtn.addEventListener("click", () =>
+    deletePokemon({ name: newName, type, imageUrl })
+  );
+
+  savePokemonBtn.style.marginLeft = "5px";
+  deletePokemonBtn.style.marginLeft = "5px";
+  editPokemonBtn.style.marginLeft = "5px";
+  pokemonCard.style.width = "180px";
+
+  pokemonCard.appendChild(pokemonImageElement);
+  pokemonCard.appendChild(pokemonNameElement);
+  pokemonCard.appendChild(pokemonTypeElement);
+  pokemonCard.appendChild(editPokemonBtn);
+  pokemonCard.appendChild(savePokemonBtn);
+  pokemonCard.appendChild(deletePokemonBtn);
+
+  pokemonContainer.insertBefore(pokemonCard, pokemonContainer.firstChild); // Legger til nye pokemon i starten
+
+  const newPokemon = {
+    name: newName,
+    type: type,
+    image: imageUrl, 
+  };
+
+  pokemonList.unshift(newPokemon); // Legg til nye pokemondata i begynnelsen av listen
+}
+createNewPokemon.addEventListener("click", createOwnPokemon);
+
 //pokemonData som parameter, variabel som inneholder info om Pokemon fra displayPokemon funksjonen
 function savePokemon(pokemonData) {
   if (savedPokemons.length < 5) {
@@ -230,23 +303,30 @@ function displaySavedPokemons() {
 
   savedPokemons.forEach((pokemonData) => {
     const savedPokemonCard = document.createElement("div");
-    const primaryType = pokemonData.types[0].type.name;
-    savedPokemonCard.style.backgroundColor = getTypeColor(primaryType);
+    savedPokemonCard.style.textAlign = "center";
     savedPokemonCard.dataset.name = pokemonData.name;
-    savedPokemonCard.dataset.url = pokemonData.species.url;
+    if (pokemonData.name && pokemonData.sprites) {
+      const primaryType = pokemonData.types[0].type.name;
+      savedPokemonCard.style.backgroundColor = getTypeColor(primaryType);
+      savedPokemonCard.dataset.url = pokemonData.species.url;
+
+      savedPokemonCard.innerHTML = `<img src=${
+        pokemonData.sprites.front_default
+      } />
+                                     <h3>${pokemonData.name}</h3>
+                                     <p>${pokemonData.types
+                                       .map((type) => type.type.name)
+                                       .join(", ")}</p>`;
+    } else {
+      savedPokemonCard.style.backgroundColor = getTypeColor(pokemonData.type); //egen lagd pokemon må handles annerledes, fordi type ikke må mappes
+      savedPokemonCard.innerHTML = `<img src=${pokemonData.imageUrl} width="120px" height="80px"/>
+                                    <h3>${pokemonData.name}</h3>
+                                     <p>Type: ${pokemonData.type}</p>`;
+    }
 
     const catchPokemonBtn = document.createElement("button");
     const deletePokemonBtn = document.createElement("button");
     const editPokemonBtn = document.createElement("button");
-
-    savedPokemonCard.style.textAlign = "center";
-    savedPokemonCard.innerHTML = `<img src=${
-      pokemonData.sprites.front_default
-    } />
-                                   <h3>${pokemonData.name}</h3>
-                                   <p>${pokemonData.types
-                                     .map((type) => type.type.name)
-                                     .join(", ")}</p>`;
 
     catchPokemonBtn.textContent = "Lagre";
     deletePokemonBtn.textContent = "Fjern";
