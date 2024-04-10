@@ -1,5 +1,5 @@
-let userPokemon = [];
-let enemyPokemon = [];
+let userPokemon = {};
+let enemyPokemon = {};
 const heroPokemonContainer = document.getElementById("hero-pokemon-container");
 const enemyPokemonContainer = document.getElementById(
   "enemy-pokemon-container"
@@ -46,16 +46,16 @@ async function fetchEnemyPokemon() {
 }
 
 async function displayUserPokemon() {
-  const pokemonCard = createPokemonCard(userPokemon);
+  const pokemonCard = createPokemonCard(userPokemon, true);
   heroPokemonContainer.appendChild(pokemonCard);
 }
 
 async function displayEnemyPokemon() {
-  const pokemonCard = createPokemonCard(enemyPokemon);
+  const pokemonCard = createPokemonCard(enemyPokemon, false);
   enemyPokemonContainer.appendChild(pokemonCard);
 }
 
-function createPokemonCard(pokemon) {
+function createPokemonCard(pokemon, isUser) {
   const pokemonCard = document.createElement("div");
   pokemonCard.classList.add("pokemon-card");
 
@@ -68,8 +68,23 @@ function createPokemonCard(pokemon) {
   const pokemonHealthElement = document.createElement("p");
   pokemonHealthElement.textContent = `HP: ${pokemon.health}/50`;
 
-  const pokemonMovesElement = document.createElement("p");
-  pokemonMovesElement.textContent = `Moves: ${pokemon.moves.join(", ")}`;
+  const pokemonMovesElement = document.createElement("div");
+
+  if (isUser) {
+    pokemon.moves.forEach((move) => {
+      const moveButton = document.createElement("button");
+      moveButton.textContent = move;
+      moveButton.style.marginLeft = "5px"
+      moveButton.addEventListener("click", () => {
+        console.log(`${pokemon.name} used ${move}!`);
+      });
+      pokemonMovesElement.appendChild(moveButton);
+    });
+  } else {
+    const movesListElement = document.createElement("p");
+    movesListElement.textContent = `Moves: ${pokemon.moves.join(", ")}`;
+    pokemonMovesElement.appendChild(movesListElement);
+  }
 
   pokemonCard.appendChild(pokemonNameElement);
   pokemonCard.appendChild(pokemonImageElement);
