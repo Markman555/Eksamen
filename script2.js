@@ -76,7 +76,7 @@ async function fetchEnemyPokemon() {
       let type = "";
       switch (move.move.name) {
         case "poison-powder":
-          damage = "2";
+          damage = "";
           type = "poison";
           break;
         case "power-whip":
@@ -109,7 +109,7 @@ async function fetchEnemyPokemon() {
 }
 
 async function displayUserPokemon() {
-  const pokemonCard = createPokemonCard(userPokemon, true);
+  const pokemonCard = createPokemonCard(userPokemon, true); //sjekker om isUser er true for å håndtere bruker Pokemon annerledes
   heroPokemonContainer.appendChild(pokemonCard);
 }
 
@@ -224,6 +224,9 @@ function getMoveEffectiveness(moveType, enemyType) {
     fire: {
       grass: "super-effective",
     },
+    grass: {
+      fire: "not very effective",
+    },
   };
   if (typeMatchups[moveType]?.[enemyType] === "super-effective") {
     return "super-effective";
@@ -232,18 +235,31 @@ function getMoveEffectiveness(moveType, enemyType) {
   }
 }
 
+let userIsPoisoned = false;
 function performEnemyAttack(moveName, damage, moveType) {
   // Enemy gjør random move
   const randomMoveIndex = Math.floor(Math.random() * enemyPokemon.moves.length);
   const enemyMove = enemyPokemon.moves[randomMoveIndex];
   const counterDamage = parseInt(enemyMove.damage);
 
-  // Oppdater UI
-  userPokemon.health -= counterDamage;
-  userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
-  alert(
-    `${enemyPokemon.name} used ${enemyMove.name} and dealt ${counterDamage} damage!`
-  );
+  if (enemyMove.name === "poison-powder") {
+    userIsPoisoned = true;
+    alert(
+      `${enemyPokemon.name} used ${enemyMove.name}, ${userPokemon.name} is poisoned!`
+    );
+  } else {
+    // Handle damage for other moves
+    userPokemon.health -= counterDamage;
+    userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
+    alert(
+      `${enemyPokemon.name} used ${enemyMove.name} and dealt ${counterDamage} damage!`
+    );
+    if (userIsPoisoned) {
+      userPokemon.health -= 5;
+      userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
+      alert(`${userPokemon.name} is poisoned and takes 5 damage!`);
+    }
+  }
 
   // Sjekk om userPokemon har health lik eller under 0
   if (userPokemon.health <= 0) {
