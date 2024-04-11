@@ -28,7 +28,7 @@ async function fetchUserPokemon() {
           damage = 10;
           break;
         case "swords-dance":
-          damage = "+5"; 
+          damage = "+5";
           break;
         case "ember":
           damage = 8;
@@ -62,13 +62,13 @@ async function fetchEnemyPokemon() {
       let damage = 0;
       switch (move.move.name) {
         case "cut":
-          damage = 5;
+          damage = 8;
           break;
         case "headbutt":
-          damage = 7;
+          damage = 13;
           break;
         case "body-slam":
-          damage = 10;
+          damage = 17;
           break;
         case "bind":
           damage = 3;
@@ -124,8 +124,8 @@ function createPokemonCard(pokemon, isUser) {
   if (isUser) {
     pokemon.moves.forEach((move) => {
       const moveButton = document.createElement("button");
-      moveButton.textContent = `${move.name} (${move.damage} dmg)`;
-      moveButton.style.marginRight = "5px"; 
+      moveButton.textContent = `${move.name}`;
+      moveButton.style.marginRight = "5px";
       moveButton.addEventListener("click", () => {
         selectedPokemonMove(move.name, move.damage);
       });
@@ -133,9 +133,7 @@ function createPokemonCard(pokemon, isUser) {
     });
   } else {
     const movesListElement = document.createElement("p");
-    const movesWithDamage = pokemon.moves.map(
-      (move) => `${move.name} (${move.damage} dmg)`
-    );
+    const movesWithDamage = pokemon.moves.map((move) => `${move.name}`);
     movesListElement.textContent = `Moves: ${movesWithDamage.join(", ")}`;
     pokemonMovesElement.appendChild(movesListElement);
   }
@@ -149,53 +147,84 @@ function createPokemonCard(pokemon, isUser) {
 }
 
 function selectedPokemonMove(moveName, damage) {
-
-    damageDealt = parseInt(damage);
-  
-
-  enemyPokemon.health -= damageDealt;
-
-  if (enemyHealthElement) {
-    enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/50`;
-  } else {
-    console.error("Enemy health element not found.");
-  }
-
-  alert(
-    `${userPokemon.name} used ${moveName} and dealt ${damageDealt} damage!`
-  );
-
-  if (enemyPokemon.health <= 0) {
-    alert(`${enemyPokemon.name} fainted!`);
-  } else {
-
+  // swords-dance skal gi damage buff
+  if (moveName === "swords-dance") {
+    // Damge buff på +5 til alle moves
+    userPokemon.moves.forEach((move) => {
+      if (move.name !== "swords-dance") {
+        move.damage += 5;
+      }
+    });
+    alert(`${userPokemon.name} increased attack stats!`);
+    // Enemy gjør random move
     const randomMoveIndex = Math.floor(
       Math.random() * enemyPokemon.moves.length
     );
     const enemyMove = enemyPokemon.moves[randomMoveIndex];
-    let counterDamage = 0;
-    if (enemyMove.damage === "+5") {
-      counterDamage = 5;
-    } else {
-      counterDamage = parseInt(enemyMove.damage);
-    }
+    let counterDamage = parseInt(enemyMove.damage);
 
+    // userPokemon skal ta counterDamage
     userPokemon.health -= counterDamage;
-
-    if (userHealthElement) {
-      userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
-    } else {
-      console.error("User health element not found.");
-    }
+    userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
 
     alert(
       `${enemyPokemon.name} used ${enemyMove.name} and dealt ${counterDamage} damage!`
     );
 
+    // Sjekk om userPokemon har health lik eller under 0
     if (userPokemon.health <= 0) {
       alert(`${userPokemon.name} fainted!`);
     }
+  } else {
+    // start damageDealt på 0
+    let damageDealt = 0;
+
+    if (typeof damage === "string") {
+      damageDealt = 0;
+    } else {
+      damageDealt = parseInt(damage);
+
+      // Gi damage til enemy
+      enemyPokemon.health -= damageDealt;
+
+      // Oppdater UI
+      enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/50`;
+
+      alert(
+        `${userPokemon.name} used ${moveName} and dealt ${damageDealt} damage!`
+      );
+
+      // Sjekk om enemy health er mindre eller lik 0
+      if (enemyPokemon.health <= 0) {
+        alert(`${enemyPokemon.name} fainted!`);
+        enemyHealthElement.textContent = `HP: 0/50`;
+      } else {
+        // Enemy gjør random move
+        const randomMoveIndex = Math.floor(
+          Math.random() * enemyPokemon.moves.length
+        );
+        const enemyMove = enemyPokemon.moves[randomMoveIndex];
+        let counterDamage = 0;
+        counterDamage = parseInt(enemyMove.damage);
+
+        // userPokemon skal ta damage
+        userPokemon.health -= counterDamage;
+
+        // Oppdater UI
+        userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
+
+        alert(
+          `${enemyPokemon.name} used ${enemyMove.name} and dealt ${counterDamage} damage!`
+        );
+
+        // Sjekk om userPokemon har health lik eller under 0
+        if (userPokemon.health <= 0) {
+          alert(`${userPokemon.name} fainted!`);
+        }
+      }
+    }
   }
 }
+
 fetchUserPokemon();
 fetchEnemyPokemon();
