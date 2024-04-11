@@ -13,7 +13,12 @@ async function fetchUserPokemon() {
   try {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/6/`);
     const pokemon = await response.json();
-    const movesToDisplay = ["mega-punch", "scratch", "swords-dance", "ember"];
+    const movesToDisplay = [
+      "dragon-breath",
+      "slash",
+      "swords-dance",
+      "inferno",
+    ];
     const filteredMoves = pokemon.moves.filter((move) =>
       movesToDisplay.includes(move.move.name)
     );
@@ -21,21 +26,26 @@ async function fetchUserPokemon() {
 
     const movesWithDamage = filteredMoves.map((move) => {
       let damage = 0;
+      let type = "";
       switch (move.move.name) {
-        case "mega-punch":
+        case "dragon-breath":
           damage = 15;
+          type = "dragon";
           break;
-        case "scratch":
+        case "slash":
           damage = 10;
+          type = "normal";
           break;
         case "swords-dance":
           damage = "+5";
+          type = "normal";
           break;
-        case "ember":
-          damage = 8;
+        case "inferno":
+          damage = 12;
+          type = "fire";
           break;
       }
-      return { name: move.move.name, damage: damage };
+      return { name: move.move.name, damage: damage, type: type };
     });
 
     userPokemon = {
@@ -55,7 +65,7 @@ async function fetchEnemyPokemon() {
   try {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/3/`);
     const pokemon = await response.json();
-    const movesToDisplay = ["cut", "headbutt", "bind", "body-slam"];
+    const movesToDisplay = ["poison-powder", "power-whip", "bind", "body-slam"];
     const filteredMoves = pokemon.moves.filter((move) =>
       movesToDisplay.includes(move.move.name)
     );
@@ -63,21 +73,25 @@ async function fetchEnemyPokemon() {
 
     const movesWithDamage = filteredMoves.map((move) => {
       let damage = 0;
+      let type = ""
       switch (move.move.name) {
-        case "cut":
-          damage = 8;
+        case "poison-powder":
+          damage = "2";
+          type = "poison"
           break;
-        case "headbutt":
-          damage = 13;
+        case "power-whip":
+          damage = 15;
+          type = "grass"
           break;
         case "body-slam":
           damage = 17;
+          type = "normal"
           break;
         case "bind":
           damage = 3;
           break;
       }
-      return { name: move.move.name, damage: damage };
+      return { name: move.move.name, damage: damage, type: type };
     });
 
     enemyPokemon = {

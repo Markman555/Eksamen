@@ -9,7 +9,7 @@ let savedPokemons = JSON.parse(localStorage.getItem("savedPokemons")) || []; //H
 async function fetchPokemon() {
   try {
     // Kalkulerer offset for å lagre et tilfeldig verdi
-    const offset = Math.floor(Math.random() * 386); // Måtte finne ut hvor mange Pokemon det er i Api'et
+    const offset = Math.floor(Math.random() * 151);
 
     // Manipulere endpoint med limit og offset, for å kun fetche 50, og offset for at det alltid er tilfeldige 50.
     const response = await fetch(
@@ -203,7 +203,8 @@ async function fetchPokemonTypes(url) {
 
 function createOwnPokemon() {
   const newName = prompt("Enter the name for your Pokémon:");
-  const type = prompt("Enter the type for your Pokémon:");
+  const primaryType = prompt("Enter the primary type for your Pokémon:");
+  const secondaryType = prompt("Enter the secondary type for your Pokémon:");
   const imageUrl = prompt("Enter the URL for the Pokémon image:");
 
   if (!newName || !type || !imageUrl) {
@@ -215,7 +216,7 @@ function createOwnPokemon() {
 
   const pokemonCard = document.createElement("div");
   pokemonCard.classList.add("pokemon-card");
-  pokemonCard.style.backgroundColor = getTypeColor(type);
+  pokemonCard.style.backgroundColor = getTypeColor(firstType);
   pokemonCard.dataset.name = newName;
   pokemonCard.style.textAlign = "center";
 
@@ -233,7 +234,14 @@ function createOwnPokemon() {
   const editPokemonBtn = document.createElement("button");
   editPokemonBtn.textContent = "rediger";
   editPokemonBtn.addEventListener("click", () =>
-    editPokemon({ name: newName, type, imageUrl })
+    editPokemon({
+      name: newName,
+      types: [
+        { type: { name: primaryType } },
+        { type: { name: secondaryType } },
+      ],
+      imageUrl,
+    })
   );
 
   const savePokemonBtn = document.createElement("button");
@@ -264,8 +272,8 @@ function createOwnPokemon() {
 
   const newPokemon = {
     name: newName,
-    type: type,
-    image: imageUrl, 
+    types: [{ type: { name: primaryType } }, { type: { name: secondaryType } }],
+    image: imageUrl,
   };
 
   pokemonList.unshift(newPokemon); // Legg til nye pokemondata i begynnelsen av listen
@@ -382,7 +390,6 @@ function deletePokemon(pokemonData) {
   pokemonList.splice(index, 1);
 }
 
-//Fiks bug hvor edited pokemon ikke blir fjernet når man flytter til savedPokemon og kan dupliseres
 function editPokemon(pokemonData) {
   const newName = prompt("Enter the new name for the Pokemon:");
 
@@ -399,7 +406,8 @@ function editPokemon(pokemonData) {
 
   // Prompt for nye typer og sjekk hvor mange den har i forveien
   let newTypes;
-  if (pokemonData.types.length === 1) {
+  if (!pokemonData.types || pokemonData.types.length === 1) {
+    //Må prompte også hvis det er en bruker lagd pokemon
     newTypes = [prompt("Enter the new type for the Pokemon:")];
   } else {
     newTypes = [
