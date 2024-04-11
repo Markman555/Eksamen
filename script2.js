@@ -17,6 +17,7 @@ async function fetchUserPokemon() {
     const filteredMoves = pokemon.moves.filter((move) =>
       movesToDisplay.includes(move.move.name)
     );
+    const types = pokemon.types.map((type) => type.type.name);
 
     const movesWithDamage = filteredMoves.map((move) => {
       let damage = 0;
@@ -42,6 +43,7 @@ async function fetchUserPokemon() {
       sprite: pokemon.sprites.front_default,
       health: 50,
       moves: movesWithDamage,
+      types: types,
     };
     displayUserPokemon();
   } catch (error) {
@@ -57,6 +59,7 @@ async function fetchEnemyPokemon() {
     const filteredMoves = pokemon.moves.filter((move) =>
       movesToDisplay.includes(move.move.name)
     );
+    const types = pokemon.types.map((type) => type.type.name);
 
     const movesWithDamage = filteredMoves.map((move) => {
       let damage = 0;
@@ -82,6 +85,7 @@ async function fetchEnemyPokemon() {
       sprite: pokemon.sprites.front_default,
       health: 50,
       moves: movesWithDamage,
+      types: types,
     };
     displayEnemyPokemon();
   } catch (error) {
@@ -110,6 +114,9 @@ function createPokemonCard(pokemon, isUser) {
   pokemonImageElement.src = pokemon.sprite;
 
   const pokemonHealthElement = document.createElement("p");
+
+  const pokemonTypesElement = document.createElement("p");
+  pokemonTypesElement.textContent = `Type: ${pokemon.types.join(", ")}`;
 
   if (isUser) {
     pokemonHealthElement.textContent = `HP: ${pokemon.health}/50`;
@@ -142,6 +149,7 @@ function createPokemonCard(pokemon, isUser) {
   pokemonCard.appendChild(pokemonImageElement);
   pokemonCard.appendChild(pokemonHealthElement);
   pokemonCard.appendChild(pokemonMovesElement);
+  pokemonCard.appendChild(pokemonTypesElement);
 
   return pokemonCard;
 }
