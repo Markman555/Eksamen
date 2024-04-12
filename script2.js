@@ -1,5 +1,7 @@
 let userPokemon = {};
 let enemyPokemon = {};
+let charizard; 
+let blastoise;
 const heroPokemonContainer = document.getElementById("hero-pokemon-container");
 const enemyPokemonContainer = document.getElementById(
   "enemy-pokemon-container"
@@ -9,7 +11,7 @@ let userHealthElement;
 
 //Legg til cries fra JSON for å gi pokemonene lyd. og fiks damage buffs
 
-async function fetchUserPokemon() {
+async function fetchCharizardData() {
   try {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/6/`);
     const pokemon = await response.json();
@@ -48,14 +50,13 @@ async function fetchUserPokemon() {
       return { name: move.move.name, damage: damage, type: type };
     });
 
-    userPokemon = {
+    charizard = {
       name: pokemon.name,
       sprite: pokemon.sprites.front_default,
       health: 120,
       moves: movesWithDamage,
       types: types,
     };
-    displayUserPokemon();
   } catch (error) {
     console.error("Error fetching user's Pokémon:", error);
   }
@@ -108,6 +109,57 @@ async function fetchEnemyPokemon() {
   }
 }
 
+async function fetchBlastoiseData() {
+  try {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/9/`);
+    const pokemon = await response.json();
+    const movesToDisplay = [
+      "hydro-pump",
+      "iron-defense",
+      "shell-smash",
+      "bite",
+    ];
+    const filteredMoves = pokemon.moves.filter((move) =>
+      movesToDisplay.includes(move.move.name)
+    );
+    const types = pokemon.types.map((type) => type.type.name);
+
+    const movesWithDamage = filteredMoves.map((move) => {
+      let damage = 0;
+      let type = "";
+      switch (move.move.name) {
+        case "hydro-pump":
+          damage = 12;
+          type = "water";
+          break;
+        case "iron-defense":
+          damage = 0; // Iron Defense does not deal damage
+          type = "steel";
+          break;
+        case "shell-smash":
+          damage = 15;
+          type = "normal";
+          break;
+        case "bite":
+          damage = 10;
+          type = "dark";
+          break;
+      }
+      return { name: move.move.name, damage: damage, type: type };
+    });
+
+    blastoise = {
+      name: pokemon.name,
+      sprite: pokemon.sprites.front_default,
+      health: 120,
+      moves: movesWithDamage,
+      types: types,
+    };
+  } catch (error) {
+    console.error("Error fetching second user's Pokémon:", error);
+  }
+}
+
 async function displayUserPokemon() {
   const pokemonCard = createPokemonCard(userPokemon, true); //sjekker om isUser er true for å håndtere bruker Pokemon annerledes
   heroPokemonContainer.appendChild(pokemonCard);
@@ -133,17 +185,11 @@ function createPokemonCard(pokemon, isUser) {
   const pokemonTypesElement = document.createElement("p");
   pokemonTypesElement.textContent = `Type: ${pokemon.types.join(", ")}`;
 
-  if (isUser) {
-    pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
-    userHealthElement = pokemonHealthElement;
-  } else {
-    pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
-    enemyHealthElement = pokemonHealthElement;
-  }
-
   const pokemonMovesElement = document.createElement("div");
 
   if (isUser) {
+    pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
+    userHealthElement = pokemonHealthElement;
     pokemon.moves.forEach((move) => {
       const moveButton = document.createElement("button");
       moveButton.textContent = `${move.name}`;
@@ -154,6 +200,8 @@ function createPokemonCard(pokemon, isUser) {
       pokemonMovesElement.appendChild(moveButton);
     });
   } else {
+    pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
+    enemyHealthElement = pokemonHealthElement;
     const movesListElement = document.createElement("p");
     const movesWithDamage = pokemon.moves.map((move) => `${move.name}`);
     movesListElement.textContent = `Moves: ${movesWithDamage.join(", ")}`;
@@ -168,6 +216,46 @@ function createPokemonCard(pokemon, isUser) {
 
   return pokemonCard;
 }
+
+// Function to handle the selection of Pokémon
+function pickPokemon(pokemon) {
+  userPokemon = pokemon;
+  const pokemonCard = createPokemonCard(pokemon, true);
+  heroPokemonContainer.innerHTML = "";
+  heroPokemonContainer.appendChild(pokemonCard);
+}
+
+// Function to create buttons for Charizard and Blastoise
+function createPokemonButtons() {
+  const charizardButton = document.createElement("button");
+  charizardButton.textContent = "Charizard";
+  charizardButton.addEventListener("click", async () => {
+    if (!charizard) {
+      await fetchCharizardData();
+    }
+    pickPokemon(charizard);
+  });
+
+  const blastoiseButton = document.createElement("button");
+  blastoiseButton.textContent = "Blastoise";
+  blastoiseButton.addEventListener("click", async () => {
+    if (!blastoise) {
+      await fetchBlastoiseData();
+    }
+    pickPokemon(blastoise);
+  });
+
+  const pokemonButtonsContainer = document.createElement("div");
+  pokemonButtonsContainer.classList.add("pokemon-buttons-container");
+  pokemonButtonsContainer.appendChild(charizardButton);
+  pokemonButtonsContainer.appendChild(blastoiseButton);
+
+  return pokemonButtonsContainer;
+}
+
+// Display the Pokémon buttons
+const pokemonButtonsContainer = createPokemonButtons();
+document.body.appendChild(pokemonButtonsContainer);
 
 function selectedPokemonMove(moveName, damage, moveType) {
   if (typeof damage === "string") {
@@ -235,6 +323,7 @@ function getMoveEffectiveness(moveType, enemyType) {
   }
 }
 
+// Sjekk om angrepet er effektivt mot brukeren, setter opp typeMatchups her også
 function getMoveEffectivenessAgainstUser(moveType, userType) {
   const typeMatchups = {
     grass: {
@@ -327,5 +416,6 @@ function performEnemyAttack() {
   }
 }
 
-fetchUserPokemon();
+fetchCharizardData();
+fetchBlastoiseData();
 fetchEnemyPokemon();
