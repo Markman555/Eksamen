@@ -6,8 +6,7 @@ const enemyPokemonContainer = document.getElementById(
 );
 let enemyHealthElement; //Må være globalt tilgjengelig
 let userHealthElement;
-
-//Legg til cries fra JSON for å gi pokemonene lyd. og fiks damage buffs
+// Kan gjøre mer, som å kunne velge enemyPokemon
 
 async function fetchCharizardData() {
   try {
@@ -79,15 +78,15 @@ async function fetchEnemyPokemon() {
           type = "poison";
           break;
         case "power-whip":
-          damage = 15;
+          damage = 12;
           type = "grass";
           break;
         case "body-slam":
-          damage = 17;
+          damage = 15;
           type = "normal";
           break;
         case "bind":
-          damage = 3;
+          damage = "";
           type = "normal";
           break;
       }
@@ -131,7 +130,7 @@ async function fetchBlastoiseData() {
           type = "water";
           break;
         case "iron-defense":
-          damage = 0; // Iron Defense does not deal damage
+          damage = ""; // Iron Defense does not deal damage
           type = "steel";
           break;
         case "shell-smash":
@@ -261,6 +260,7 @@ function selectedPokemonMove(moveName, damage, moveType) {
   }
 }
 
+let userHasIronDefense = false;
 function handleNonDamagingMove(moveName) {
   // swords-dance skal gi damage buff
   if (moveName === "swords-dance") {
@@ -271,6 +271,10 @@ function handleNonDamagingMove(moveName) {
       }
     });
     alert(`${userPokemon.name} increased attack stats!`);
+  }
+  if (moveName === "iron-defense") {
+    userHasIronDefense = true;
+    alert(`${userPokemon.name} increased defense!`);
   }
 }
 
@@ -285,6 +289,10 @@ function handleDamagingMove(moveName, damage, moveType) {
   if (moveEffectiveness === "super-effective") {
     finalDamage += 8;
     alert("It was Super effective!");
+  }
+  if (moveEffectiveness === "not very effective") {
+    finalDamage -= 5;
+    alert("It was not very effective...");
   }
   alert(`Venusaur took ${finalDamage} damage`);
   // Oppdater health for enemy
@@ -301,6 +309,9 @@ function getMoveEffectiveness(moveType, enemyType) {
     grass: {
       fire: "not very effective",
     },
+    water: {
+      grass: "not very effective",
+    },
   };
   if (typeMatchups[moveType]?.[enemyType] === "super-effective") {
     return "super-effective";
@@ -316,10 +327,10 @@ function getMoveEffectivenessAgainstUser(moveType, userType) {
   const typeMatchups = {
     grass: {
       fire: "not very effective",
+      water: "super-effective",
     },
   };
-  console.log("Move Type:", moveType);
-  console.log("User Type:", userType);
+
   if (typeMatchups[moveType]?.[userType] === "super-effective") {
     return "super-effective against user";
   } else if (typeMatchups[moveType]?.[userType] === "not very effective") {
@@ -387,7 +398,16 @@ function performEnemyAttack() {
 
     if (moveEffectivenessAgainstUser === "not very effective against user") {
       counterDamage -= 5;
-      alert("It was not very effective");
+      alert("It was not very effective...");
+    } else if (moveEffectivenessAgainstUser === "super-effective against user") {
+      counterDamage += 8;
+      alert("It was super effective!")
+    }
+
+    if (userHasIronDefense) {
+      // Mindre damage hvis brukeren har bruk iron defense
+      counterDamage -= 5;
+      alert(`${userPokemon.name} takes less damage with Iron Defense!`);
     }
 
     alert(`${userPokemon.name} took ${counterDamage} damage`);
