@@ -51,7 +51,7 @@ async function fetchUserPokemon() {
     userPokemon = {
       name: pokemon.name,
       sprite: pokemon.sprites.front_default,
-      health: 50,
+      health: 120,
       moves: movesWithDamage,
       types: types,
     };
@@ -98,7 +98,7 @@ async function fetchEnemyPokemon() {
     enemyPokemon = {
       name: pokemon.name,
       sprite: pokemon.sprites.front_default,
-      health: 50,
+      health: 120,
       moves: movesWithDamage,
       types: types,
     };
@@ -134,10 +134,10 @@ function createPokemonCard(pokemon, isUser) {
   pokemonTypesElement.textContent = `Type: ${pokemon.types.join(", ")}`;
 
   if (isUser) {
-    pokemonHealthElement.textContent = `HP: ${pokemon.health}/50`;
+    pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
     userHealthElement = pokemonHealthElement;
   } else {
-    pokemonHealthElement.textContent = `HP: ${pokemon.health}/50`;
+    pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
     enemyHealthElement = pokemonHealthElement;
   }
 
@@ -179,7 +179,7 @@ function selectedPokemonMove(moveName, damage, moveType) {
   // Sørg for enemy ikke angriper hvis health er mindre enn 0, og at det ikke viser - i health
   if (enemyPokemon.health <= 0) {
     alert(`${enemyPokemon.name} fainted!`);
-    enemyHealthElement.textContent = `HP: 0/50`;
+    enemyHealthElement.textContent = `HP: 0/120`;
   } else {
     performEnemyAttack();
   }
@@ -204,18 +204,16 @@ function handleDamagingMove(moveName, damage, moveType) {
   const moveEffectiveness = getMoveEffectiveness(moveType, enemyType);
 
   let finalDamage = damageDealt;
+  alert(`${userPokemon.name} used ${moveName} on Venusaur!`);
   // super effective angrep gir ekstra
   if (moveEffectiveness === "super-effective") {
     finalDamage += 8;
     alert("It was Super effective!");
   }
-
+  alert(`Venusaur took ${finalDamage} damage`);
   // Oppdater health for enemy
   enemyPokemon.health -= finalDamage;
-  enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/50`;
-  alert(
-    `${userPokemon.name} used ${moveName} and dealt ${finalDamage} damage!`
-  );
+  enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/120`;
 }
 
 function getMoveEffectiveness(moveType, enemyType) {
@@ -230,41 +228,71 @@ function getMoveEffectiveness(moveType, enemyType) {
   };
   if (typeMatchups[moveType]?.[enemyType] === "super-effective") {
     return "super-effective";
+  } else if (typeMatchups[moveType]?.[enemyType] === "not very effective") {
+    return "not very effective";
+  } else {
+    return "normal";
+  }
+}
+
+function getMoveEffectivenessAgainstUser(moveType, userType) {
+  // Define type matchups
+  const typeMatchups = {
+    grass: {
+      fire: "not very effective",
+    },
+  };
+  console.log("Move Type:", moveType);
+  console.log("User Type:", userType);
+  if (typeMatchups[moveType]?.[userType] === "super-effective") {
+    return "super-effective against user";
+  } else if (typeMatchups[moveType]?.[userType] === "not very effective") {
+    return "not very effective against user";
   } else {
     return "normal";
   }
 }
 
 let userIsPoisoned = false;
-function performEnemyAttack(moveName, damage, moveType) {
+function performEnemyAttack() {
   // Enemy gjør random move
   const randomMoveIndex = Math.floor(Math.random() * enemyPokemon.moves.length);
   const enemyMove = enemyPokemon.moves[randomMoveIndex];
-  const counterDamage = parseInt(enemyMove.damage);
+  let counterDamage = parseInt(enemyMove.damage); // counter damage må være let for at verdien skal endres
+  const moveType = enemyMove.type;
+  const userType = Array.isArray(userPokemon.types)
+    ? userPokemon.types[0]
+    : userPokemon.types;
+  const moveEffectivenessAgainstUser = getMoveEffectivenessAgainstUser(
+    moveType,
+    userType
+  );
 
+  if (userIsPoisoned) {
+    userPokemon.health -= 5;
+    userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
+    alert(`${userPokemon.name} is poisoned and takes 5 damage!`);
+  }
   if (enemyMove.name === "poison-powder") {
     userIsPoisoned = true;
     alert(
       `${enemyPokemon.name} used ${enemyMove.name}, ${userPokemon.name} is poisoned!`
     );
   } else {
-    // Handle damage for other moves
-    userPokemon.health -= counterDamage;
-    userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
-    alert(
-      `${enemyPokemon.name} used ${enemyMove.name} and dealt ${counterDamage} damage!`
-    );
-    if (userIsPoisoned) {
-      userPokemon.health -= 5;
-      userHealthElement.textContent = `HP: ${userPokemon.health}/50`;
-      alert(`${userPokemon.name} is poisoned and takes 5 damage!`);
+    alert(`${enemyPokemon.name} used ${enemyMove.name} on Charizard!`);
+    if (moveEffectivenessAgainstUser === "not very effective against user") {
+      counterDamage -= 5; // Reduce damage by 5 if the move is not very effective
+      alert("It was not very effective");
     }
+    alert(`Charizard took ${counterDamage} damage`);
+    userPokemon.health -= counterDamage;
+    userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
   }
 
   // Sjekk om userPokemon har health lik eller under 0
   if (userPokemon.health <= 0) {
     alert(`${userPokemon.name} fainted!`);
-    userHealthElement.textContent = `HP: 0/50`;
+    userHealthElement.textContent = `HP: 0/120`;
   }
 }
 
