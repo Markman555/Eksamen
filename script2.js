@@ -1,6 +1,7 @@
 let charizard; // Må være globalt tilgjengelig
 let blastoise;
 let venusaur;
+let enemyPokemon;
 const heroPokemonContainer = document.getElementById("hero-pokemon-container");
 const enemyPokemonContainer = document.getElementById(
   "enemy-pokemon-container"
@@ -54,6 +55,7 @@ async function fetchCharizardData() {
       moves: movesWithDamage,
       types: types,
     };
+    return charizard;
   } catch (error) {
     console.error("Error fetching user's Pokémon:", error);
   }
@@ -100,6 +102,7 @@ async function fetchVenusaurData() {
       moves: movesWithDamage,
       types: types,
     };
+    return venusaur;
   } catch (error) {
     console.error("Error fetching enemy Pokémon:", error);
   }
@@ -151,6 +154,7 @@ async function fetchBlastoiseData() {
       moves: movesWithDamage,
       types: types,
     };
+    return blastoise;
   } catch (error) {
     console.error("Error fetching second user's Pokémon:", error);
   }
@@ -180,6 +184,7 @@ function createPokemonCard(pokemon, isUser) {
   const pokemonMovesElement = document.createElement("div");
 
   if (isUser) {
+    console.log("Creating moves for user's Pokemon:", pokemon.moves);
     pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
     userHealthElement = pokemonHealthElement;
     pokemon.moves.forEach((move) => {
@@ -192,6 +197,7 @@ function createPokemonCard(pokemon, isUser) {
       pokemonMovesElement.appendChild(moveButton);
     });
   } else {
+    console.log("Creating moves for enemy's Pokemon:", pokemon.moves);
     pokemonHealthElement.textContent = `HP: ${pokemon.health}/120`;
     enemyHealthElement = pokemonHealthElement;
     const movesListElement = document.createElement("p");
@@ -209,18 +215,37 @@ function createPokemonCard(pokemon, isUser) {
   return pokemonCard;
 }
 
-function pickPokemon(pokemon) {
+async function pickPokemon(pokemon) {
   userPokemon = pokemon;
   const pokemonCard = createPokemonCard(pokemon, true);
   heroPokemonContainer.innerHTML = "";
   heroPokemonContainer.appendChild(pokemonCard);
-  // Velger random enemy Pokemon
-  const remainingPokemons = [blastoise, venusaur, charizard].filter(
-    (pokemon) => pokemon !== userPokemon
-  );
-  const randomIndex = Math.floor(Math.random() * remainingPokemons.length);
-  const randomEnemyPokemon = remainingPokemons[randomIndex];
-  displayEnemyPokemon(randomEnemyPokemon);
+  // Sørg for enemyPokemon ikke er samme som brukerens
+  try {
+    const remainingPokemons = [blastoise, venusaur, charizard].filter(
+      (poke) => poke !== userPokemon
+    );
+
+    const randomIndex = Math.floor(Math.random() * remainingPokemons.length);
+    const randomEnemyPokemon = remainingPokemons[randomIndex];
+    //switch statement for å assigne en enemyPokemon
+    switch (randomEnemyPokemon) {
+      case blastoise:
+        enemyPokemon = await fetchBlastoiseData();
+        break;
+      case venusaur:
+        enemyPokemon = await fetchVenusaurData();
+        break;
+      case charizard:
+        enemyPokemon = await fetchCharizardData();
+        break;
+    }
+
+    // kall funksjon
+    displayEnemyPokemon(randomEnemyPokemon);
+  } catch (error) {
+    console.error("Error fetching random enemy Pokémon:", error);
+  }
 }
 
 function createPokemonButtons() {
@@ -260,6 +285,7 @@ const pokemonButtonsContainer = createPokemonButtons();
 document.body.appendChild(pokemonButtonsContainer);
 
 function selectedPokemonMove(moveName, damage, moveType) {
+
   if (typeof damage === "string") {
     handleNonDamagingMove(moveName);
   } else {
@@ -291,6 +317,16 @@ function handleNonDamagingMove(moveName) {
     userHasIronDefense = true;
     alert(`${userPokemon.name} increased defense!`);
   }
+  if (moveName === "bind") {
+    enemyTrappedByBind = true;
+    alert(`${userPokemon.name} used bind, ${enemyPokemon.name} is trapped`);
+  }
+  if (moveName === "poison-powder") {
+    enemyIsPoisoned = true;
+    alert(
+      `${userPokemon.name} used poison-powder, ${enemyPokemon.name} is poisoned`
+    );
+  }
 }
 
 function handleDamagingMove(moveName, damage, moveType) {
@@ -299,7 +335,7 @@ function handleDamagingMove(moveName, damage, moveType) {
   const moveEffectiveness = getMoveEffectiveness(moveType, enemyType);
 
   let finalDamage = damageDealt;
-  alert(`${userPokemon.name} used ${moveName} on Venusaur!`);
+  alert(`${userPokemon.name} used ${moveName} on ${enemyPokemon.name}!`);
   // super effective angrep gir ekstra
   if (moveEffectiveness === "super-effective") {
     finalDamage += 8;
@@ -309,7 +345,10 @@ function handleDamagingMove(moveName, damage, moveType) {
     finalDamage -= 5;
     alert("It was not very effective...");
   }
-  alert(`Venusaur took ${finalDamage} damage`);
+  if (enemyIronDefense) {
+    finalDamage -= 5;
+  }
+  alert(`${enemyPokemon.name} took ${finalDamage} damage`);
   // Oppdater health for enemy
   enemyPokemon.health -= finalDamage;
   enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/120`;
@@ -320,12 +359,15 @@ function getMoveEffectiveness(moveType, enemyType) {
   const typeMatchups = {
     fire: {
       grass: "super-effective",
+      water: "not very effective",
     },
     grass: {
       fire: "not very effective",
+      water: "super-effective",
     },
     water: {
       grass: "not very effective",
+      fire: "super-effective",
     },
   };
   if (typeMatchups[moveType]?.[enemyType] === "super-effective") {
@@ -344,6 +386,14 @@ function getMoveEffectivenessAgainstUser(moveType, userType) {
       fire: "not very effective",
       water: "super-effective",
     },
+    water: {
+      fire: "super-effective",
+      grass: "not very effective",
+    },
+    fire: {
+      water: "not very effective",
+      grass: "super-effective",
+    },
   };
 
   if (typeMatchups[moveType]?.[userType] === "super-effective") {
@@ -354,9 +404,9 @@ function getMoveEffectivenessAgainstUser(moveType, userType) {
     return "normal";
   }
 }
-let turnsTrappedByBind = 0;
-let isUserTrappedByBind = false;
+
 let userIsPoisoned = false;
+let enemyIsPoisoned = false;
 // Poison effekt gjør damage hver turn etter brukeren er poisoned
 function handlePoisonEffect() {
   if (userIsPoisoned) {
@@ -364,9 +414,17 @@ function handlePoisonEffect() {
     userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
     alert(`${userPokemon.name} is poisoned and loses health!`);
   }
+  if (enemyIsPoisoned) {
+    enemyPokemon.health -= 5; 
+    enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/120`; 
+    alert(`${enemyPokemon.name} is poisoned and loses health!`); 
+  }
 }
 
 // Bind effect, damage er 1/8 av brukerens health for hver turn
+let turnsTrappedByBind = 0;
+let isUserTrappedByBind = false;
+let enemyTrappedByBind = false;
 function handleBindEffect() {
   if (isUserTrappedByBind) {
     const damageFromBind = Math.ceil(userPokemon.health / 8);
@@ -374,12 +432,20 @@ function handleBindEffect() {
     userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
     alert(`${userPokemon.name} is trapped by Bind and loses health!`);
     turnsTrappedByBind--;
+  } else if (enemyTrappedByBind) {
+    const damageFromBind = Math.ceil(enemyPokemon.health / 8);
+    enemyPokemon.health -= damageFromBind;
+    enemyHealthElement.textContent = `HP: ${enemyPokemon.health}/120`;
+    alert(`${enemyPokemon.name} is trapped by Bind and loses health!`);
+    turnsTrappedByBind--;
   } else if (turnsTrappedByBind === 0) {
     isUserTrappedByBind = false;
   }
 }
 
+let enemyIronDefense = false;
 function performEnemyAttack() {
+  console.log("Performing enemy attack...");
   // Enemy velger et tilfeldig angrep
   const randomMoveIndex = Math.floor(Math.random() * enemyPokemon.moves.length);
   const enemyMove = enemyPokemon.moves[randomMoveIndex];
@@ -404,6 +470,9 @@ function performEnemyAttack() {
     alert(
       `${enemyPokemon.name} used ${enemyMove.name}, ${userPokemon.name} is trapped by Bind!`
     );
+  } else if (enemyMove.name === "iron-defense") {
+    alert(`${enemyPokemon.name} used iron-defense and increased its defense`);
+    enemyIronDefense = true;
   } else {
     // Håndter damage fra andre moves
     let counterDamage = parseInt(enemyMove.damage);
@@ -426,7 +495,6 @@ function performEnemyAttack() {
       counterDamage -= 5;
       alert(`${userPokemon.name} takes less damage with Iron Defense!`);
     }
-
     alert(`${userPokemon.name} took ${counterDamage} damage`);
     userPokemon.health -= counterDamage;
     userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
@@ -443,4 +511,4 @@ function performEnemyAttack() {
 
 fetchCharizardData();
 fetchBlastoiseData();
-fetchEnemyPokemon();
+fetchVenusaurData();
