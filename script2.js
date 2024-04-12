@@ -236,7 +236,6 @@ function getMoveEffectiveness(moveType, enemyType) {
 }
 
 function getMoveEffectivenessAgainstUser(moveType, userType) {
-  // Define type matchups
   const typeMatchups = {
     grass: {
       fire: "not very effective",
@@ -252,44 +251,76 @@ function getMoveEffectivenessAgainstUser(moveType, userType) {
     return "normal";
   }
 }
-
+let turnsTrappedByBind = 0;
+let isUserTrappedByBind = false;
 let userIsPoisoned = false;
-function performEnemyAttack() {
-  // Enemy gjør random move
-  const randomMoveIndex = Math.floor(Math.random() * enemyPokemon.moves.length);
-  const enemyMove = enemyPokemon.moves[randomMoveIndex];
-  let counterDamage = parseInt(enemyMove.damage); // counter damage må være let for at verdien skal endres
-  const moveType = enemyMove.type;
-  const userType = Array.isArray(userPokemon.types)
-    ? userPokemon.types[0]
-    : userPokemon.types;
-  const moveEffectivenessAgainstUser = getMoveEffectivenessAgainstUser(
-    moveType,
-    userType
-  );
-
+// Poison effekt gjør damage hver turn etter brukeren er poisoned
+function handlePoisonEffect() {
   if (userIsPoisoned) {
     userPokemon.health -= 5;
     userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
-    alert(`${userPokemon.name} is poisoned and takes 5 damage!`);
+    alert(`${userPokemon.name} is poisoned and loses health!`);
   }
+}
+
+// Bind effect, damage er 1/8 av brukerens health for hver turn
+function handleBindEffect() {
+  if (isUserTrappedByBind) {
+    const damageFromBind = Math.ceil(userPokemon.health / 8);
+    userPokemon.health -= damageFromBind;
+    userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
+    alert(`${userPokemon.name} is trapped by Bind and loses health!`);
+    turnsTrappedByBind--;
+  } else if (turnsTrappedByBind === 0) {
+    isUserTrappedByBind = false;
+  }
+}
+
+function performEnemyAttack() {
+  // Enemy velger et tilfeldig angrep
+  const randomMoveIndex = Math.floor(Math.random() * enemyPokemon.moves.length);
+  const enemyMove = enemyPokemon.moves[randomMoveIndex];
+  const moveType = enemyMove.type;
+
+  // Finner angrepets effektivitet mot typen til brukeren
+  const moveEffectivenessAgainstUser = getMoveEffectivenessAgainstUser(
+    moveType,
+    userPokemon.types[0]
+  );
+
+  // poison-powder håndteres annerledes
   if (enemyMove.name === "poison-powder") {
     userIsPoisoned = true;
     alert(
       `${enemyPokemon.name} used ${enemyMove.name}, ${userPokemon.name} is poisoned!`
     );
+  } else if (enemyMove.name === "bind") {
+    // Bind angrepet fungerer ved å trappe mostanderen fra mellom 4 til 5 turns
+    turnsTrappedByBind = Math.floor(Math.random() * 2) + 4;
+    isUserTrappedByBind = true;
+    alert(
+      `${enemyPokemon.name} used ${enemyMove.name}, ${userPokemon.name} is trapped by Bind!`
+    );
   } else {
-    alert(`${enemyPokemon.name} used ${enemyMove.name} on Charizard!`);
+    // Håndter damage fra andre moves
+    let counterDamage = parseInt(enemyMove.damage);
+    alert(
+      `${enemyPokemon.name} used ${enemyMove.name} on ${userPokemon.name}!`
+    );
+
     if (moveEffectivenessAgainstUser === "not very effective against user") {
-      counterDamage -= 5; // Reduce damage by 5 if the move is not very effective
+      counterDamage -= 5;
       alert("It was not very effective");
     }
-    alert(`Charizard took ${counterDamage} damage`);
+
+    alert(`${userPokemon.name} took ${counterDamage} damage`);
     userPokemon.health -= counterDamage;
     userHealthElement.textContent = `HP: ${userPokemon.health}/120`;
   }
-
-  // Sjekk om userPokemon har health lik eller under 0
+  // Kjører disse to funksjoner for å sjekke om brukeren er poisoned eller fanget av bind
+  handlePoisonEffect();
+  handleBindEffect();
+  // Sjekk om brukerens pokemon er død
   if (userPokemon.health <= 0) {
     alert(`${userPokemon.name} fainted!`);
     userHealthElement.textContent = `HP: 0/120`;
