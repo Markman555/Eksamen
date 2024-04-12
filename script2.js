@@ -1,12 +1,10 @@
-let userPokemon = {};
-let enemyPokemon = {};
-let charizard; 
+let charizard; // Må være globalt tilgjengelig
 let blastoise;
 const heroPokemonContainer = document.getElementById("hero-pokemon-container");
 const enemyPokemonContainer = document.getElementById(
   "enemy-pokemon-container"
 );
-let enemyHealthElement;
+let enemyHealthElement; //Må være globalt tilgjengelig
 let userHealthElement;
 
 //Legg til cries fra JSON for å gi pokemonene lyd. og fiks damage buffs
@@ -160,11 +158,6 @@ async function fetchBlastoiseData() {
   }
 }
 
-async function displayUserPokemon() {
-  const pokemonCard = createPokemonCard(userPokemon, true); //sjekker om isUser er true for å håndtere bruker Pokemon annerledes
-  heroPokemonContainer.appendChild(pokemonCard);
-}
-
 async function displayEnemyPokemon() {
   const pokemonCard = createPokemonCard(enemyPokemon, false);
   enemyPokemonContainer.appendChild(pokemonCard);
@@ -217,7 +210,6 @@ function createPokemonCard(pokemon, isUser) {
   return pokemonCard;
 }
 
-// Function to handle the selection of Pokémon
 function pickPokemon(pokemon) {
   userPokemon = pokemon;
   const pokemonCard = createPokemonCard(pokemon, true);
@@ -225,26 +217,22 @@ function pickPokemon(pokemon) {
   heroPokemonContainer.appendChild(pokemonCard);
 }
 
-// Function to create buttons for Charizard and Blastoise
 function createPokemonButtons() {
+  //Knapp og eventlistener for Charizard
   const charizardButton = document.createElement("button");
   charizardButton.textContent = "Charizard";
   charizardButton.addEventListener("click", async () => {
-    if (!charizard) {
-      await fetchCharizardData();
-    }
+    await fetchCharizardData();
     pickPokemon(charizard);
   });
-
+  // Knapp og eventlistener for Blastoise
   const blastoiseButton = document.createElement("button");
   blastoiseButton.textContent = "Blastoise";
   blastoiseButton.addEventListener("click", async () => {
-    if (!blastoise) {
-      await fetchBlastoiseData();
-    }
+    await fetchBlastoiseData();
     pickPokemon(blastoise);
   });
-
+  // Legg til knapper i en container
   const pokemonButtonsContainer = document.createElement("div");
   pokemonButtonsContainer.classList.add("pokemon-buttons-container");
   pokemonButtonsContainer.appendChild(charizardButton);
@@ -253,7 +241,7 @@ function createPokemonButtons() {
   return pokemonButtonsContainer;
 }
 
-// Display the Pokémon buttons
+// Vis knappene
 const pokemonButtonsContainer = createPokemonButtons();
 document.body.appendChild(pokemonButtonsContainer);
 
