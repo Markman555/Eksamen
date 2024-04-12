@@ -1,12 +1,12 @@
 let charizard; // Må være globalt tilgjengelig
 let blastoise;
+let venusaur;
 const heroPokemonContainer = document.getElementById("hero-pokemon-container");
 const enemyPokemonContainer = document.getElementById(
   "enemy-pokemon-container"
 );
 let enemyHealthElement; //Må være globalt tilgjengelig
 let userHealthElement;
-// Kan gjøre mer, som å kunne velge enemyPokemon
 
 async function fetchCharizardData() {
   try {
@@ -59,7 +59,7 @@ async function fetchCharizardData() {
   }
 }
 
-async function fetchEnemyPokemon() {
+async function fetchVenusaurData() {
   try {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/3/`);
     const pokemon = await response.json();
@@ -86,21 +86,20 @@ async function fetchEnemyPokemon() {
           type = "normal";
           break;
         case "bind":
-          damage = "";
+          damage = ""; //Gjør damage over tid
           type = "normal";
           break;
       }
       return { name: move.move.name, damage: damage, type: type };
     });
 
-    enemyPokemon = {
+    venusaur = {
       name: pokemon.name,
       sprite: pokemon.sprites.front_default,
       health: 120,
       moves: movesWithDamage,
       types: types,
     };
-    displayEnemyPokemon();
   } catch (error) {
     console.error("Error fetching enemy Pokémon:", error);
   }
@@ -130,7 +129,7 @@ async function fetchBlastoiseData() {
           type = "water";
           break;
         case "iron-defense":
-          damage = ""; // Iron Defense does not deal damage
+          damage = ""; // Iron Defense øker resistance
           type = "steel";
           break;
         case "shell-smash":
@@ -157,8 +156,9 @@ async function fetchBlastoiseData() {
   }
 }
 
-async function displayEnemyPokemon() {
-  const pokemonCard = createPokemonCard(enemyPokemon, false);
+async function displayEnemyPokemon(randomEnemyPokemon) {
+  const pokemonCard = createPokemonCard(randomEnemyPokemon, false);
+  enemyPokemonContainer.innerHTML = "";
   enemyPokemonContainer.appendChild(pokemonCard);
 }
 
@@ -214,6 +214,13 @@ function pickPokemon(pokemon) {
   const pokemonCard = createPokemonCard(pokemon, true);
   heroPokemonContainer.innerHTML = "";
   heroPokemonContainer.appendChild(pokemonCard);
+  // Velger random enemy Pokemon
+  const remainingPokemons = [blastoise, venusaur, charizard].filter(
+    (pokemon) => pokemon !== userPokemon
+  );
+  const randomIndex = Math.floor(Math.random() * remainingPokemons.length);
+  const randomEnemyPokemon = remainingPokemons[randomIndex];
+  displayEnemyPokemon(randomEnemyPokemon);
 }
 
 function createPokemonButtons() {
@@ -231,11 +238,19 @@ function createPokemonButtons() {
     await fetchBlastoiseData();
     pickPokemon(blastoise);
   });
+  // Knapp og eventlistener for Venusaur
+  const VenusaurButton = document.createElement("button");
+  VenusaurButton.textContent = "Venusaur";
+  VenusaurButton.addEventListener("click", async () => {
+    await fetchVenusaurData();
+    pickPokemon(venusaur);
+  });
   // Legg til knapper i en container
   const pokemonButtonsContainer = document.createElement("div");
   pokemonButtonsContainer.classList.add("pokemon-buttons-container");
   pokemonButtonsContainer.appendChild(charizardButton);
   pokemonButtonsContainer.appendChild(blastoiseButton);
+  pokemonButtonsContainer.appendChild(VenusaurButton);
 
   return pokemonButtonsContainer;
 }
@@ -399,9 +414,11 @@ function performEnemyAttack() {
     if (moveEffectivenessAgainstUser === "not very effective against user") {
       counterDamage -= 5;
       alert("It was not very effective...");
-    } else if (moveEffectivenessAgainstUser === "super-effective against user") {
+    } else if (
+      moveEffectivenessAgainstUser === "super-effective against user"
+    ) {
       counterDamage += 8;
-      alert("It was super effective!")
+      alert("It was super effective!");
     }
 
     if (userHasIronDefense) {
